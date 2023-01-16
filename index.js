@@ -67,7 +67,10 @@ Student
 
 /** DELETE */
 // Student.deleteMany({ name: 'Jeremy' }).then(msg => console.log(msg))
-
+// also can get data which been delete - use findOneAndDelete()
+Student
+  .findOneAndDelete({ 'scholarship.merit': { $lte: 2000 }})
+  .then(delData => console.log(delData))
 
 app.get('/', (req, res) => {
   res.render('index.ejs')
