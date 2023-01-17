@@ -17,11 +17,29 @@ mongoose.connect('mongodb://localhost:27017/exampleDB', {
 
 // create Schema
 const studentSchema = new mongoose.Schema({
-  name: String,
-  age: Number,
-  major: String,
+  name: {
+    type: String,
+    maxlength: 15,
+    required: true
+  },
+  age: {
+    type: Number,
+    max: 150,
+    min: 18,
+    required: [true, 'Missed age field.']
+  },
+  major: {
+    type: String,
+    enum: ['EE', 'CS', 'Account'],
+    required: function () {
+      return this.age > 18
+    }
+  },
   scholarship: {
-    merit: Number,
+    merit: {
+      type: Number,
+      max: [6000, 'Merit cant more then $6000. ']
+    },
     other: Number
   }
 })
@@ -52,25 +70,25 @@ const insertModel = (ModelConstructor, insertData, alias = 'data') => {
 
   return modelLiteral
 }
-
-// insertModel(Student, { name: 'Chili', age: 30, major: 'CS', scholarship: { merit: 2000, other: 1000 }}, 'Chili')
-
+console.log('insert before')
+insertModel(Student, { name: 'Mary', age: 25, major: 'CS', scholarship: { merit: 5000, other: 1000 }}, 'Mary')
+console.log('insert after')
 /** UPDATE */
 // option 說明: if 沒有給 { new: true } option, callback msg 會給到 update 之前的 data
-Student
-  .findOneAndUpdate(
-    { name: 'Chili' },
-    { name: 'Chili Hot'},
-    { new: true }
-  )
-  .then(msg => console.log(msg))
+// Student
+//   .findOneAndUpdate(
+//     { name: 'Chili' },
+//     { name: 'Chili Hot'},
+//     { new: true }
+//   )
+//   .then(msg => console.log(msg))
 
 /** DELETE */
 // Student.deleteMany({ name: 'Jeremy' }).then(msg => console.log(msg))
 // also can get data which been delete - use findOneAndDelete()
-Student
-  .findOneAndDelete({ 'scholarship.merit': { $lte: 2000 }})
-  .then(delData => console.log(delData))
+// Student
+//   .findOneAndDelete({ 'scholarship.merit': { $lte: 2000 }})
+//   .then(delData => console.log(delData))
 
 app.get('/', (req, res) => {
   res.render('index.ejs')
