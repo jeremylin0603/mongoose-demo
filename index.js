@@ -1,6 +1,7 @@
 import express from 'express'
 import ejs from 'ejs'
 import mongoose from 'mongoose'
+import fs from 'node:fs'
 
 const app = express()
 app.use(express.static('public'))
@@ -30,7 +31,7 @@ const studentSchema = new mongoose.Schema({
   },
   major: {
     type: String,
-    enum: ['EE', 'CS', 'Account'],
+    enum: ['EE', 'CS', 'Account', 'Chem'],
     required: function () {
       return this.age > 18
     }
@@ -54,21 +55,34 @@ studentSchema.static.setOtherToZero = function () {
   return this.updateMany({}, { 'scholarship.other': 0 })
 }
 
+/** define middleware - pre(before) & post(after) */
+studentSchema.pre('save', async function() {
+  fs.writeFile('record.txt', 'One data has ready to save.', { flag: 'a' }, e => {
+    if (e) throw e
+  })
+})
+
+studentSchema.post('save', async function() {
+  fs.writeFile('record.txt', 'One data has been saved.', { flag: 'a' }, e => {
+    if (e) throw e
+  })
+})
+
 // create a model from Student Schema
-/** notice: model 命名必須是單數，必須大寫開頭 */
+// notice: model 命名必須是單數，必須大寫開頭
 const Student = mongoose.model('Student', studentSchema)
 
 
 // use instance method that we create before
-Student.findOne({ name: 'Jeremy' }).then(data => {
-  console.log('total scholarship:', data.totalScholarship())
-})
+// Student.findOne({ name: 'Jeremy' }).then(data => {
+//   console.log('total scholarship:', data.totalScholarship())
+// })
 
-Student.find({}).then(dataArr => {
-  dataArr.forEach(data => {
-    console.log(`${data.name}'s total scholarship is: ${data.totalScholarship()}`)
-  })
-})
+// Student.find({}).then(dataArr => {
+//   dataArr.forEach(data => {
+//     console.log(`${data.name}'s total scholarship is: ${data.totalScholarship()}`)
+//   })
+// })
 
 /** FIND (SQL called: SELECT ... FROM ...) */
 // Student.find({ name: 'Jeremy' }).then(data => console.log(data))
@@ -93,7 +107,8 @@ const insertModel = (ModelConstructor, insertData, alias = 'data') => {
   return modelLiteral
 }
 
-// insertModel(Student, { name: 'Johnson', age: 18, major: 'Account', scholarship: { merit: 100, other: 0 }}, 'Johnson')
+// const insertName = 'John Wu9'
+// insertModel(Student, { name: insertName, age: 22, major: 'Chem', scholarship: { merit: 100, other: 0 }}, insertName)
 
 /** UPDATE */
 // option 說明: if 沒有給 { new: true } option, callback msg 會給到 update 之前的 data
