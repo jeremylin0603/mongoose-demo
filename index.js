@@ -44,9 +44,31 @@ const studentSchema = new mongoose.Schema({
   }
 })
 
+/**  create an instance method at "SCHEMA", and used by "DATA" */
+studentSchema.methods.totalScholarship = function () {
+  return this.scholarship.merit + this.scholarship.other
+}
+
+/** create a static method at "SCHEMA", and used by "MODEL" */
+studentSchema.static.setOtherToZero = function () {
+  return this.updateMany({}, { 'scholarship.other': 0 })
+}
+
 // create a model from Student Schema
 /** notice: model 命名必須是單數，必須大寫開頭 */
 const Student = mongoose.model('Student', studentSchema)
+
+
+// use instance method that we create before
+Student.findOne({ name: 'Jeremy' }).then(data => {
+  console.log('total scholarship:', data.totalScholarship())
+})
+
+Student.find({}).then(dataArr => {
+  dataArr.forEach(data => {
+    console.log(`${data.name}'s total scholarship is: ${data.totalScholarship()}`)
+  })
+})
 
 /** FIND (SQL called: SELECT ... FROM ...) */
 // Student.find({ name: 'Jeremy' }).then(data => console.log(data))
@@ -70,9 +92,9 @@ const insertModel = (ModelConstructor, insertData, alias = 'data') => {
 
   return modelLiteral
 }
-console.log('insert before')
-insertModel(Student, { name: 'Mary', age: 25, major: 'CS', scholarship: { merit: 5000, other: 1000 }}, 'Mary')
-console.log('insert after')
+
+// insertModel(Student, { name: 'Johnson', age: 18, major: 'Account', scholarship: { merit: 100, other: 0 }}, 'Johnson')
+
 /** UPDATE */
 // option 說明: if 沒有給 { new: true } option, callback msg 會給到 update 之前的 data
 // Student
